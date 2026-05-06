@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(New-Item -ItemType Directory -Path \"D:\\\\GoMiGo_New\\\\mockup\" -Force)",
+      "PowerShell(Move-Item \"D:\\\\GoMiGo_New\\\\DOC-20260315-WA0171\" \"D:\\\\GoMiGo_New\\\\mockup\\\\landing-v1.html\" -Force)",
+      "Bash(npx create-next-app@14 . --typescript --tailwind --app --no-src-dir --eslint --import-alias=\"@/*\" --use-npm)"
+    ]
+  }
+}
