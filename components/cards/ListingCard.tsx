@@ -32,8 +32,10 @@ const TYPE_LABELS: Record<string, string> = {
 
 export function ListingCard({ property, distanceKm, onFavoriteToggle, isFavorited = false, className }: Props) {
   const [imgIdx, setImgIdx] = useState(0)
-  const images = property.images?.map(i => i.url) ?? (property.cover_image ? [property.cover_image] : [])
-  const displayImage = images[imgIdx] ?? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80'
+  // Prefer property_images rows, then cover_image, then a final placeholder
+  const galleryImages = property.images?.length ? property.images.map(i => i.url) : []
+  const images = galleryImages.length ? galleryImages : (property.cover_image ? [property.cover_image] : [])
+  const displayImage = images[imgIdx] ?? images[0] ?? 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&q=80'
 
   return (
     <div className={cn('group rounded-2xl overflow-hidden bg-card text-card-foreground border border-border shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col', className)}>
