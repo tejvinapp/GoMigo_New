@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { Search, SlidersHorizontal, MapPin, X, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -13,15 +14,18 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ListingCard } from '@/components/cards/ListingCard'
 import type { Property } from '@/types/database'
 
+// Dynamic import in the client component (where it belongs) so we don't pass a function across the server/client boundary
+const LeafletMap = dynamic(() => import('@/components/maps/LeafletMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full bg-muted animate-pulse rounded-xl flex items-center justify-center">
+      <div className="text-muted-foreground text-sm">Loading map...</div>
+    </div>
+  ),
+})
+
 interface Props {
   properties: Array<Property & { images: Array<{ url: string; is_official: boolean; sort_order: number }> }>
-  LeafletMap: React.ComponentType<{
-    properties: Property[]
-    center?: [number, number]
-    zoom?: number
-    selectedId?: string | null
-    onPropertyClick?: (id: string) => void
-  }>
   initialFilters: { q: string; type: string; destination: string }
 }
 
@@ -36,7 +40,7 @@ const PROPERTY_TYPES = [
 
 const AMENITY_OPTIONS = ['wifi', 'parking', 'pool', 'ac', 'kitchen', 'gym', 'spa', 'pets']
 
-export default function ExploreClient({ properties, LeafletMap, initialFilters }: Props) {
+export default function ExploreClient({ properties, initialFilters }: Props) {
   const router = useRouter()
   const pathname = usePathname()
 
