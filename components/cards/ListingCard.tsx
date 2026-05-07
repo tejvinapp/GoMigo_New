@@ -36,7 +36,7 @@ export function ListingCard({ property, distanceKm, onFavoriteToggle, isFavorite
   const displayImage = images[imgIdx] ?? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80'
 
   return (
-    <div className={cn('group rounded-2xl overflow-hidden bg-white border border-border shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col', className)}>
+    <div className={cn('group rounded-2xl overflow-hidden bg-card text-card-foreground border border-border shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col', className)}>
       {/* Image */}
       <div className="relative h-52 overflow-hidden">
         <Image

@@ -166,8 +166,8 @@ export default function ExploreClient({ properties, initialFilters }: Props) {
   return (
     <div className="h-screen flex flex-col">
       {/* Top bar */}
-      <div className="bg-white border-b border-border px-4 py-3 flex items-center gap-3 z-10">
-        <Link href="/landing" className="font-serif text-xl font-bold text-forest-700 shrink-0">
+      <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3 z-10">
+        <Link href="/landing" className="font-serif text-xl font-bold text-forest-700 dark:text-forest-400 shrink-0">
           GoMiGooo!
         </Link>
         <form onSubmit={handleSearch} className="flex-1 flex gap-2">
@@ -216,7 +216,7 @@ export default function ExploreClient({ properties, initialFilters }: Props) {
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Desktop filter sidebar */}
-        <div className="hidden md:block w-64 border-r border-border bg-white overflow-y-auto p-4 shrink-0">
+        <div className="hidden md:block w-64 border-r border-border bg-card overflow-y-auto p-4 shrink-0">
           <h2 className="font-semibold text-sm text-foreground mb-4">Filters</h2>
           <FilterPanel />
         </div>
