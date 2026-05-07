@@ -116,12 +116,12 @@ export default function ExploreClient({ properties, initialFilters }: Props) {
       <Separator />
       <div>
         <h3 className="text-sm font-medium text-foreground mb-2">Minimum Rating</h3>
-        <Select value={minRating} onValueChange={v => setMinRating(v ?? '')}>
+        <Select value={minRating || 'any'} onValueChange={v => setMinRating(v === 'any' ? '' : (v ?? ''))}>
           <SelectTrigger className="h-9">
             <SelectValue placeholder="Any rating" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any rating</SelectItem>
+            <SelectItem value="any">Any rating</SelectItem>
             {['3', '3.5', '4', '4.5'].map(r => (
               <SelectItem key={r} value={r}>{r}+ stars</SelectItem>
             ))}
