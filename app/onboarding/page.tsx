@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSupabase } from '@/components/providers'
 import { Button } from '@/components/ui/button'
@@ -27,6 +27,20 @@ export default function OnboardingPage() {
   const [selectedRole, setSelectedRole] = useState<UserRole>('customer')
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // If user already finished onboarding, send them where they belong
+  useEffect(() => {
+    if (!user) return
+    supabase.from('users').select('role, onboarding_done').eq('id', user.id).single()
+      .then(({ data }) => {
+        if (data && (data as { onboarding_done: boolean })?.onboarding_done) {
+          const role = (data as { role: string }).role
+          if (role === 'admin') router.replace('/admin/dashboard')
+          else if (role === 'customer') router.replace('/explore')
+          else router.replace('/owner/dashboard')
+        }
+      })
+  }, [user, supabase, router])
 
   async function handleRoleSelect(role: UserRole) {
     setSelectedRole(role)
