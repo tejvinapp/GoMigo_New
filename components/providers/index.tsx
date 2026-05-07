@@ -3,10 +3,9 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
-import type { Database } from '@/types/database'
 
 type SupabaseContext = {
-  supabase: SupabaseClient<Database>
+  supabase: SupabaseClient
   user: User | null
   userRole: string | null
   loading: boolean
@@ -16,7 +15,7 @@ const Context = createContext<SupabaseContext | undefined>(undefined)
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [supabase] = useState(() =>
-    createBrowserClient<Database>(
+    createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
