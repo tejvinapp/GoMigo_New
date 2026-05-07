@@ -148,10 +148,22 @@ export default function LandingClient({ settings, destinations }: Props) {
 
       {/* HERO */}
       <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <Image src={heroBg} alt="Hero" fill priority className="object-cover" sizes="100vw" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/85" />
-        </div>
+        {/* Gradient fallback always present — image overlays on top if it loads */}
+        <div className="absolute inset-0 gradient-hero" />
+        {heroBg && (
+          <div className="absolute inset-0">
+            <Image
+              src={heroBg}
+              alt=""
+              fill
+              priority
+              className="object-cover"
+              sizes="100vw"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+            />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/85" />
 
         <div className="relative z-10 max-w-5xl mx-auto px-4 text-center text-white">
           {heroKicker && (
@@ -195,12 +207,12 @@ export default function LandingClient({ settings, destinations }: Props) {
             >
               <div className="flex gap-2 p-1.5 rounded-2xl bg-white/95 backdrop-blur-md shadow-2xl">
                 <div className="flex-1 flex items-center gap-2 px-3">
-                  <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <Search className="w-5 h-5 text-stone-500 shrink-0" />
                   <Input
                     placeholder="Where do you want to go? Ooty, Coorg, Munnar..."
                     value={destination}
                     onChange={e => setDestination(e.target.value)}
-                    className="border-0 shadow-none focus-visible:ring-0 text-foreground placeholder:text-muted-foreground bg-transparent h-11"
+                    className="border-0 shadow-none focus-visible:ring-0 !text-stone-900 placeholder:text-stone-500 bg-transparent h-11"
                   />
                 </div>
                 <Button type="submit" className="bg-forest-700 hover:bg-forest-800 text-white rounded-xl px-6 h-11">
@@ -216,7 +228,7 @@ export default function LandingClient({ settings, destinations }: Props) {
             transition={{ duration: 0.7, delay: 0.4 }}
             className="flex flex-wrap justify-center gap-3"
           >
-            <Button asChild size="lg" className="bg-golden-500 hover:bg-golden-600 text-foreground rounded-full px-6 shadow-xl">
+            <Button asChild size="lg" className="bg-golden-500 hover:bg-golden-600 !text-stone-900 rounded-full px-6 shadow-xl">
               <Link href={ctaPrimaryLink}><Compass className="w-5 h-5 mr-2" />{ctaPrimary}</Link>
             </Button>
             {ctaSecondary && (
