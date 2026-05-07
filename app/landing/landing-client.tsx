@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { useInView } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -167,42 +167,24 @@ export default function LandingClient({ settings, destinations }: Props) {
 
         <div className="relative z-10 max-w-5xl mx-auto px-4 text-center text-white">
           {heroKicker && (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs sm:text-sm font-medium"
-            >
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs sm:text-sm font-medium">
               <span className="w-2 h-2 bg-golden-400 rounded-full animate-pulse" />
               {heroKicker}
-            </motion.div>
+            </div>
           )}
 
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6 whitespace-pre-line text-balance"
-          >
+          <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6 whitespace-pre-line text-balance">
             {heroHeadline}
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-lg md:text-xl text-white/85 max-w-2xl mx-auto mb-8 text-balance"
-          >
+          <p className="text-lg md:text-xl text-white/85 max-w-2xl mx-auto mb-8 text-balance">
             {heroSub}
-          </motion.p>
+          </p>
 
           {/* SEARCH BAR */}
           {showSearch && (
-            <motion.form
+            <form
               onSubmit={search}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
               className="max-w-xl mx-auto mb-6"
             >
               <div className="flex gap-2 p-1.5 rounded-2xl bg-white/95 backdrop-blur-md shadow-2xl">
@@ -219,15 +201,10 @@ export default function LandingClient({ settings, destinations }: Props) {
                   Search
                 </Button>
               </div>
-            </motion.form>
+            </form>
           )}
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-            className="flex flex-wrap justify-center gap-3"
-          >
+          <div className="flex flex-wrap justify-center gap-3">
             <Button asChild size="lg" className="bg-golden-500 hover:bg-golden-600 !text-stone-900 rounded-full px-6 shadow-xl">
               <Link href={ctaPrimaryLink}><Compass className="w-5 h-5 mr-2" />{ctaPrimary}</Link>
             </Button>
@@ -236,16 +213,11 @@ export default function LandingClient({ settings, destinations }: Props) {
                 <Link href={ctaSecondaryLink}>{ctaSecondary}<ArrowRight className="w-4 h-4 ml-2" /></Link>
               </Button>
             )}
-          </motion.div>
+          </div>
 
           {/* STATS */}
           {showStats && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.7, delay: 0.6 }}
-              className="grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto mt-14 pt-8 border-t border-white/15"
-            >
+            <div className="grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto mt-14 pt-8 border-t border-white/15">
               {[
                 { v: parseInt(s(settings, 'landing_stat1_value', '500')), suf: s(settings, 'landing_stat1_suffix', '+'), lbl: s(settings, 'landing_stat1_label', 'Stays') },
                 { v: parseInt(s(settings, 'landing_stat2_value', '50')), suf: s(settings, 'landing_stat2_suffix', '+'), lbl: s(settings, 'landing_stat2_label', 'Guides') },
@@ -258,7 +230,7 @@ export default function LandingClient({ settings, destinations }: Props) {
                   <div className="text-xs sm:text-sm text-white/70 mt-1">{stat.lbl}</div>
                 </div>
               ))}
-            </motion.div>
+            </div>
           )}
         </div>
 
@@ -282,12 +254,8 @@ export default function LandingClient({ settings, destinations }: Props) {
                 { icon: Phone, t: s(settings, 'landing_how_step2_title', 'Connect'), d: s(settings, 'landing_how_step2_desc', '') },
                 { icon: Mountain, t: s(settings, 'landing_how_step3_title', 'Experience'), d: s(settings, 'landing_how_step3_desc', '') },
               ].map((step, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
                   className="text-center p-6 rounded-2xl bg-card border border-border card-hover"
                 >
                   <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-forest-50 dark:bg-forest-950 flex items-center justify-center text-forest-700 dark:text-forest-400">
@@ -296,7 +264,7 @@ export default function LandingClient({ settings, destinations }: Props) {
                   <div className="text-xs font-bold text-golden-600 mb-1">STEP {i + 1}</div>
                   <h3 className="font-serif text-xl font-semibold mb-2">{step.t}</h3>
                   <p className="text-sm text-muted-foreground">{step.d}</p>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -312,14 +280,8 @@ export default function LandingClient({ settings, destinations }: Props) {
               <p className="text-muted-foreground max-w-2xl mx-auto text-balance">{s(settings, 'landing_destinations_subtitle', '')}</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-              {destItems.slice(0, 6).map((d, i) => (
-                <motion.div
-                  key={d.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.05 }}
-                >
+              {destItems.slice(0, 6).map((d) => (
+                <div key={d.id}>
                   <Link
                     href={`/explore?city=${encodeURIComponent(d.name)}`}
                     className="group block relative h-64 sm:h-72 rounded-3xl overflow-hidden card-hover"
@@ -340,7 +302,7 @@ export default function LandingClient({ settings, destinations }: Props) {
                       </div>
                     </div>
                   </Link>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -362,12 +324,8 @@ export default function LandingClient({ settings, destinations }: Props) {
                 { icon: Shield, t: s(settings, 'landing_why_point3_title', ''), d: s(settings, 'landing_why_point3_desc', '') },
                 { icon: CheckCircle, t: s(settings, 'landing_why_point4_title', ''), d: s(settings, 'landing_why_point4_desc', '') },
               ].map((p, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.05 }}
                   className="flex gap-4 p-6 rounded-2xl bg-card border border-border card-hover"
                 >
                   <div className="shrink-0 w-12 h-12 rounded-xl bg-forest-50 dark:bg-forest-950 flex items-center justify-center text-forest-700 dark:text-forest-400">
@@ -377,7 +335,7 @@ export default function LandingClient({ settings, destinations }: Props) {
                     <h3 className="font-serif text-xl font-semibold mb-1">{p.t}</h3>
                     <p className="text-sm text-muted-foreground">{p.d}</p>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -393,12 +351,8 @@ export default function LandingClient({ settings, destinations }: Props) {
             </div>
             <div className="grid md:grid-cols-3 gap-5">
               {testimonials.slice(0, 6).map((t, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.05 }}
                   className="p-6 rounded-2xl bg-card border border-border"
                 >
                   <div className="flex gap-0.5 mb-3">
@@ -412,7 +366,7 @@ export default function LandingClient({ settings, destinations }: Props) {
                       <div className="text-xs text-muted-foreground">{t.location}</div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
