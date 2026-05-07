@@ -42,7 +42,7 @@ export default function CustomerDashboardClient({ user, bookings, favorites }: P
 
       <div className="max-w-3xl mx-auto px-4 py-6">
         {/* Profile header */}
-        <div className="flex items-center gap-4 mb-8 p-5 bg-white rounded-2xl border border-border shadow-sm">
+        <div className="flex items-center gap-4 mb-8 p-5 bg-card rounded-2xl border border-border shadow-sm">
           <Avatar className="w-16 h-16">
             <AvatarImage src={user.avatar_url ?? ''} />
             <AvatarFallback className="text-xl bg-forest-50 text-forest-700">{user.name?.[0] ?? 'T'}</AvatarFallback>
@@ -77,7 +77,7 @@ export default function CustomerDashboardClient({ user, bookings, favorites }: P
             { label: 'Bookings', value: bookings.length },
             { label: 'Saved', value: favorites.length },
           ].map(stat => (
-            <div key={stat.label} className="bg-white rounded-xl p-4 border border-border text-center shadow-sm">
+            <div key={stat.label} className="bg-card rounded-xl p-4 border border-border text-center shadow-sm">
               <div className="text-2xl font-bold text-forest-700">{stat.value}</div>
               <div className="text-xs text-muted-foreground mt-1">{stat.label}</div>
             </div>
@@ -164,7 +164,7 @@ export default function CustomerDashboardClient({ user, bookings, favorites }: P
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {favorites.map(p => (
-                  <Link key={p.id} href={`/explore/${p.id}`} className="block bg-white rounded-2xl border border-border shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                  <Link key={p.id} href={`/explore/${p.id}`} className="block bg-card rounded-2xl border border-border shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                     <div className="relative h-40">
                       {p.cover_image ? <Image src={p.cover_image} alt={p.title} fill className="object-cover" /> : <div className="w-full h-full gradient-hero" />}
                     </div>

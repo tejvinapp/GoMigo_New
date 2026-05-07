@@ -147,7 +147,7 @@ export default function ListingDetailClient({ property, images, reviews, nearby,
   return (
     <div className="min-h-screen bg-warmwhite">
       {/* Back nav */}
-      <div className="bg-white border-b border-border px-4 sm:px-6 py-3 flex items-center justify-between">
+      <div className="bg-card border-b border-border px-4 sm:px-6 py-3 flex items-center justify-between">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/explore"><ArrowLeft className="w-4 h-4 mr-1" /> Back</Link>
         </Button>
@@ -235,7 +235,7 @@ export default function ListingDetailClient({ property, images, reviews, nearby,
                 { icon: <BedDouble className="w-5 h-5" />, label: 'Bedrooms', value: property.bedrooms },
                 { icon: <Bath className="w-5 h-5" />, label: 'Bathrooms', value: property.bathrooms },
               ].map(stat => (
-                <div key={stat.label} className="bg-white rounded-xl p-4 border border-border text-center">
+                <div key={stat.label} className="bg-card rounded-xl p-4 border border-border text-center">
                   <div className="flex justify-center text-forest-700 mb-2">{stat.icon}</div>
                   <div className="font-semibold text-foreground">{stat.value}</div>
                   <div className="text-xs text-muted-foreground">{stat.label}</div>
@@ -257,7 +257,7 @@ export default function ListingDetailClient({ property, images, reviews, nearby,
                 <h2 className="text-xl font-serif font-semibold mb-4">Amenities</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {property.amenities.map(amenity => (
-                    <div key={amenity} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-border text-sm">
+                    <div key={amenity} className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border text-sm">
                       <span className="text-forest-700">{AMENITY_ICONS[amenity.toLowerCase()] ?? <CheckCircle className="w-4 h-4" />}</span>
                       <span className="capitalize text-foreground">{amenity}</span>
                     </div>
@@ -293,13 +293,13 @@ export default function ListingDetailClient({ property, images, reviews, nearby,
                 <RatingStars rating={property.rating} count={property.review_count} size="md" />
               </div>
               {reviews.length === 0 ? (
-                <div className="bg-white rounded-xl p-6 border border-border text-center text-muted-foreground text-sm">
+                <div className="bg-card rounded-xl p-6 border border-border text-center text-muted-foreground text-sm">
                   No reviews yet. Be the first to review after your stay!
                 </div>
               ) : (
                 <div className="space-y-4">
                   {reviews.map(review => (
-                    <div key={review.id} className="bg-white rounded-xl p-5 border border-border">
+                    <div key={review.id} className="bg-card rounded-xl p-5 border border-border">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <Avatar className="w-10 h-10">
@@ -334,7 +334,7 @@ export default function ListingDetailClient({ property, images, reviews, nearby,
 
           {/* Right: Booking widget */}
           <div className="lg:col-span-1">
-            <div className="sticky top-20 bg-white rounded-2xl border border-border shadow-lg p-6">
+            <div className="sticky top-20 bg-card rounded-2xl border border-border shadow-lg p-6">
               <div className="flex items-baseline gap-2 mb-6">
                 <PriceDisplay amount={property.price_per_night} size="lg" />
                 <span className="text-muted-foreground text-sm">/ night</span>

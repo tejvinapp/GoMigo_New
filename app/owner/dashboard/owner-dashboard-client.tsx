@@ -81,7 +81,7 @@ export default function OwnerDashboardClient({ user, properties, bookings, subsc
   return (
     <div className="min-h-screen bg-warmwhite flex">
       {/* Sidebar */}
-      <aside className="hidden md:flex w-56 bg-white border-r border-border flex-col p-4 shrink-0">
+      <aside className="hidden md:flex w-56 bg-card border-r border-border flex-col p-4 shrink-0">
         <Link href="/landing" className="font-serif text-xl font-bold text-forest-700 mb-6 block">
           GoMiGooo!
         </Link>
@@ -180,7 +180,7 @@ export default function OwnerDashboardClient({ user, properties, bookings, subsc
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {pendingBookings.slice(0, 3).map(b => (
-                    <div key={b.id} className="flex items-center justify-between bg-white rounded-xl p-3">
+                    <div key={b.id} className="flex items-center justify-between bg-card rounded-xl p-3">
                       <div>
                         <div className="text-sm font-medium">{b.customer?.name ?? 'Guest'}</div>
                         <div className="text-xs text-muted-foreground">

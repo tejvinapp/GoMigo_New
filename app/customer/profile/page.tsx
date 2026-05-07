@@ -50,7 +50,7 @@ export default function CustomerProfilePage() {
 
   return (
     <div className="min-h-screen bg-warmwhite">
-      <div className="bg-white border-b border-border px-4 py-3 flex items-center gap-3">
+      <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/customer/dashboard"><ArrowLeft className="w-4 h-4 mr-1" />Dashboard</Link>
         </Button>

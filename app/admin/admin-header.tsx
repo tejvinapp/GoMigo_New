@@ -35,7 +35,7 @@ export default function AdminHeader({
   }
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-border shadow-sm">
+    <header className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
         {/* Left: logo + mobile toggle */}
         <div className="flex items-center gap-2">
@@ -97,7 +97,7 @@ export default function AdminHeader({
                 className="fixed inset-0 z-40"
                 onClick={() => setMenuOpen(false)}
               />
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-border shadow-lg overflow-hidden z-50">
+              <div className="absolute right-0 mt-2 w-64 bg-card rounded-xl border border-border shadow-lg overflow-hidden z-50">
                 <div className="p-3 border-b border-border">
                   <div className="font-medium text-sm">{name ?? 'Admin'}</div>
                   <div className="text-xs text-muted-foreground truncate">{email}</div>
@@ -136,7 +136,7 @@ export default function AdminHeader({
 
       {/* Mobile nav */}
       {mobileOpen && (
-        <nav className="md:hidden border-t border-border bg-white">
+        <nav className="md:hidden border-t border-border bg-card">
           <div className="max-w-7xl mx-auto px-2 py-2 grid grid-cols-2 gap-1">
             {NAV.map(item => {
               const active = pathname === item.href || pathname?.startsWith(item.href + '/')

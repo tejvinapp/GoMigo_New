@@ -30,7 +30,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-warmwhite flex">
-      <aside className="hidden md:flex w-56 bg-white border-r border-border flex-col p-4 shrink-0">
+      <aside className="hidden md:flex w-56 bg-card border-r border-border flex-col p-4 shrink-0">
         <Link href="/landing" className="font-serif text-xl font-bold text-forest-700 mb-4 block">GoMiGooo!</Link>
         <Badge className="mb-4 bg-red-50 text-red-700 border-red-200 text-xs w-fit">Admin Panel</Badge>
         <nav className="space-y-1">
