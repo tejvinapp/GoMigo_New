@@ -4,7 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { format } from 'date-fns'
-import { Compass, Calendar, Heart, ArrowLeft, MapPin, Phone } from 'lucide-react'
+import { Compass, Calendar, Heart, ArrowLeft, MapPin, Phone, Briefcase } from 'lucide-react'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -26,14 +27,17 @@ export default function CustomerDashboardClient({ user, bookings, favorites }: P
 
   return (
     <div className="min-h-screen bg-warmwhite">
-      <div className="bg-white border-b border-border px-4 py-3 flex items-center justify-between">
+      <div className="bg-card border-b border-border px-4 py-3 flex items-center justify-between sticky top-0 z-30">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/explore"><ArrowLeft className="w-4 h-4 mr-1" />Explore</Link>
         </Button>
-        <Link href="/landing" className="font-serif text-lg font-bold text-forest-700">GoMiGooo!</Link>
-        <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); window.location.href = '/' }}>
-          Sign Out
-        </Button>
+        <Link href="/" className="font-serif text-lg font-bold text-forest-700 dark:text-forest-400">GoMiGooo!</Link>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); window.location.href = '/' }}>
+            Sign Out
+          </Button>
+        </div>
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-6">
@@ -48,6 +52,22 @@ export default function CustomerDashboardClient({ user, bookings, favorites }: P
             <p className="text-muted-foreground text-sm">{user.email}</p>
             {user.phone && <p className="text-muted-foreground text-sm">{user.phone}</p>}
           </div>
+        </div>
+
+        {/* Become a vendor invite */}
+        <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-forest-700 to-forest-600 text-white flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <Briefcase className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-semibold text-sm">Got something to offer travelers?</div>
+              <div className="text-xs text-white/80">List your property, drive cabs, guide tours, or run a shop</div>
+            </div>
+          </div>
+          <Button asChild size="sm" className="bg-white text-forest-700 hover:bg-white/90 shrink-0">
+            <Link href="/become-vendor">Join</Link>
+          </Button>
         </div>
 
         {/* Stats */}

@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 
@@ -43,9 +44,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, [supabase])
 
   return (
-    <Context.Provider value={{ supabase, user, userRole, loading }}>
-      {children}
-    </Context.Provider>
+    <NextThemesProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+      <Context.Provider value={{ supabase, user, userRole, loading }}>
+        {children}
+      </Context.Provider>
+    </NextThemesProvider>
   )
 }
 

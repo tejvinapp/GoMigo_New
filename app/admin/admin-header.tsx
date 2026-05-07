@@ -8,6 +8,7 @@ import {
   Activity, LogOut, ChevronDown, Menu, X, ExternalLink
 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { useSupabase } from '@/components/providers'
 
 const NAV = [
@@ -72,7 +73,9 @@ export default function AdminHeader({
           })}
         </nav>
 
-        {/* Right: user menu */}
+        {/* Right: theme toggle + user menu */}
+        <div className="flex items-center gap-1">
+        <ThemeToggle />
         <div className="relative">
           <button
             onClick={() => setMenuOpen(o => !o)}
@@ -118,7 +121,7 @@ export default function AdminHeader({
                   </Link>
                   <button
                     onClick={signOut}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-red-50 text-red-600"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 dark:text-red-400"
                   >
                     <LogOut className="w-4 h-4" />
                     Sign out
@@ -127,6 +130,7 @@ export default function AdminHeader({
               </div>
             </>
           )}
+        </div>
         </div>
       </div>
 

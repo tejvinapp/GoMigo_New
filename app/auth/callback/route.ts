@@ -24,13 +24,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}/onboarding`)
       }
 
-      // If a specific 'next' was requested, honor it; otherwise route by role
+      // If a specific 'next' was requested, honor it; otherwise default by role
       if (searchParams.get('next')) {
         return NextResponse.redirect(`${origin}${next}`)
       }
       if (u.role === 'admin') return NextResponse.redirect(`${origin}/admin/dashboard`)
-      if (u.role === 'customer') return NextResponse.redirect(`${origin}/explore`)
-      return NextResponse.redirect(`${origin}/owner/dashboard`)
+      // Everyone else (customer + vendors) lands on /explore — vendors can switch to their dashboard from the menu
+      return NextResponse.redirect(`${origin}/explore`)
     }
   }
 

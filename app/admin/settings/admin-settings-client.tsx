@@ -14,7 +14,8 @@ import { toast } from 'sonner'
 import {
   CreditCard, Mail, Bot, Layout, Package, Zap, Eye, EyeOff, Save,
   Palette, Search, BarChart, Calendar, Lock, Bell, Languages, RefreshCw,
-  Scale, Phone, Wrench, MessageSquare, Settings as SettingsIcon
+  Scale, Phone, Wrench, MessageSquare, Settings as SettingsIcon,
+  Sparkles, ListChecks, MapPin, Heart, Star, ArrowRight, Footprints, Users2
 } from 'lucide-react'
 import type { PlatformSetting } from '@/types/database'
 
@@ -48,6 +49,17 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
   contact:      { label: 'Contact & Social', icon: Phone, description: 'Support email/phone and social media links.' },
   operations:   { label: 'Operations', icon: Wrench, description: 'Maintenance mode, signup toggles, system controls.' },
   sms:          { label: 'SMS', icon: MessageSquare, description: 'SMS provider settings (Twilio, MSG91, etc.).' },
+
+  // Landing page sections
+  'landing-hero':         { label: 'Landing · Hero', icon: Sparkles, description: 'Top-of-page hero: headline, subheadline, background, CTA buttons, search bar.' },
+  'landing-stats':        { label: 'Landing · Stats', icon: BarChart, description: 'Animated stat counters (e.g. "500+ stays").' },
+  'landing-how':          { label: 'Landing · How It Works', icon: ListChecks, description: '3-step explainer below the hero.' },
+  'landing-destinations': { label: 'Landing · Destinations', icon: MapPin, description: 'Featured destinations carousel section.' },
+  'landing-why':          { label: 'Landing · Why Us', icon: Heart, description: 'Value proposition for travelers (4 points).' },
+  'landing-testimonials': { label: 'Landing · Testimonials', icon: Star, description: 'Reviews section (data still in Content > testimonials_json).' },
+  'landing-finalcta':     { label: 'Landing · Final CTA', icon: ArrowRight, description: 'Closing call-to-action before the footer.' },
+  'landing-footer':       { label: 'Landing · Footer', icon: Footprints, description: 'Footer copy, link columns (JSON), copyright.' },
+  'landing-vendor-strip': { label: 'Landing · Vendor Strip', icon: Users2, description: 'Subtle bottom banner inviting people to join as vendors/owners.' },
 }
 
 export default function AdminSettingsClient({ initialSettings }: Props) {

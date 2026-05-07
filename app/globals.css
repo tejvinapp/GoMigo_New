@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    /* Light theme (warm off-white, forest green primary) */
     --background: 38 33% 97%;
     --foreground: 150 30% 10%;
     --card: 0 0% 100%;
@@ -24,50 +25,85 @@
     --input: 38 20% 88%;
     --ring: 148 62% 26%;
     --radius: 0.75rem;
+
+    --warmwhite: 38 33% 97%;
+    --surface: 0 0% 100%;
   }
 
-  * {
-    @apply border-border;
+  .dark {
+    /* Dark theme — deep forest with golden accents */
+    --background: 150 25% 7%;       /* near-black with green tint */
+    --foreground: 38 30% 92%;       /* warm off-white */
+    --card: 150 20% 11%;
+    --card-foreground: 38 30% 92%;
+    --popover: 150 20% 11%;
+    --popover-foreground: 38 30% 92%;
+    --primary: 148 50% 55%;         /* brighter green for dark bg */
+    --primary-foreground: 150 30% 8%;
+    --secondary: 150 15% 16%;
+    --secondary-foreground: 38 30% 92%;
+    --muted: 150 15% 14%;
+    --muted-foreground: 150 8% 65%;
+    --accent: 37 91% 60%;
+    --accent-foreground: 150 30% 8%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 150 15% 18%;
+    --input: 150 15% 18%;
+    --ring: 148 50% 55%;
+
+    --warmwhite: 150 25% 7%;
+    --surface: 150 20% 11%;
   }
+
+  * { @apply border-border; }
 
   body {
-    @apply bg-warmwhite text-foreground font-sans antialiased;
+    @apply text-foreground font-sans antialiased;
+    background-color: hsl(var(--warmwhite));
+    transition: background-color 200ms ease, color 200ms ease;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-serif;
-  }
+  h1, h2, h3, h4, h5, h6 { @apply font-serif; }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
 
+  /* Glassmorphism that adapts to theme */
   .glass {
-    @apply bg-white/80 backdrop-blur-md border border-white/30 shadow-lg;
+    @apply backdrop-blur-md border shadow-lg;
+    background-color: hsl(var(--card) / 0.8);
+    border-color: hsl(var(--border) / 0.5);
+  }
+  .dark .glass {
+    background-color: hsl(var(--card) / 0.6);
+    border-color: hsl(var(--border) / 0.5);
   }
 
-  .glass-dark {
-    @apply bg-black/20 backdrop-blur-md border border-white/10;
-  }
+  .glass-dark { @apply bg-black/20 backdrop-blur-md border border-white/10; }
 
   .gradient-hero {
     background: linear-gradient(135deg, #0d3d1f 0%, #1a6b3c 40%, #2d7a50 70%, #1a4a2f 100%);
+  }
+  .dark .gradient-hero {
+    background: linear-gradient(135deg, #061f10 0%, #0d3d1f 40%, #1a6b3c 70%, #061f10 100%);
   }
 
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg, #1a6b3c, #f5a623);
   }
-
-  .card-hover {
-    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  .dark .text-gradient {
+    background-image: linear-gradient(135deg, #4ade80, #f5a623);
   }
 
-  .price-badge {
-    @apply bg-forest-700 text-white text-sm font-semibold px-3 py-1 rounded-full;
-  }
+  .card-hover { @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1; }
+
+  .price-badge { @apply bg-forest-700 text-white text-sm font-semibold px-3 py-1 rounded-full; }
+
+  .bg-warmwhite { background-color: hsl(var(--warmwhite)); }
+  .bg-surface { background-color: hsl(var(--surface)); }
 }
 
 /* Leaflet map overrides */
@@ -75,8 +111,10 @@
   z-index: 1;
   border-radius: 0.75rem;
 }
-
 .leaflet-popup-content-wrapper {
   border-radius: 0.75rem;
   box-shadow: 0 10px 30px rgba(0,0,0,0.15);
 }
+.dark .leaflet-tile { filter: brightness(0.85) contrast(1.1); }
+.dark .leaflet-popup-content-wrapper { background: hsl(var(--card)); color: hsl(var(--foreground)); }
+.dark .leaflet-popup-tip { background: hsl(var(--card)); }

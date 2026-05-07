@@ -8,11 +8,10 @@ import { useRouter } from 'next/navigation'
 import { useSupabase } from '@/components/providers'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import {
-  MapPin, Star, Users, Zap, Shield, TrendingUp,
-  Phone, Map, CheckCircle, ArrowRight, Search,
-  Mountain, Car, Compass, ShoppingBag, Share2, ChevronRight
+  MapPin, Star, Shield, Phone, CheckCircle, ArrowRight, Search,
+  Mountain, Compass, ChevronRight, Heart, IndianRupee, LogIn, User
 } from 'lucide-react'
 import type { Destination } from '@/types/database'
 
@@ -21,611 +20,459 @@ interface Props {
   destinations: Destination[]
 }
 
-// Default destinations if DB not seeded yet
-const DEFAULT_DESTINATIONS: Partial<Destination>[] = [
-  { id: '1', name: 'The Nilgiris', state: 'Tamil Nadu', lat: 11.41, lng: 76.69, property_count: 120, cover_image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=600&q=80' },
-  { id: '2', name: 'Ooty', state: 'Tamil Nadu', lat: 11.41, lng: 76.69, property_count: 85, cover_image: 'https://images.unsplash.com/photo-1582627838-2e66941f87c4?w=600&q=80' },
-  { id: '3', name: 'Kodaikanal', state: 'Tamil Nadu', lat: 10.24, lng: 77.49, property_count: 64, cover_image: 'https://images.unsplash.com/photo-1587922546307-776227941871?w=600&q=80' },
-  { id: '4', name: 'Munnar', state: 'Kerala', lat: 10.09, lng: 77.06, property_count: 110, cover_image: 'https://images.unsplash.com/photo-1563720223185-11003d516935?w=600&q=80' },
-  { id: '5', name: 'Coorg', state: 'Karnataka', lat: 12.34, lng: 75.81, property_count: 78, cover_image: 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=600&q=80' },
+const DEFAULT_DESTINATIONS = [
+  { id: '1', name: 'The Nilgiris', state: 'Tamil Nadu', cover_image: 'https://images.unsplash.com/photo-1623874228601-f4193c7b1818?w=800&q=80', property_count: 120 },
+  { id: '2', name: 'Ooty', state: 'Tamil Nadu', cover_image: 'https://images.unsplash.com/photo-1591465001572-a2a72f4f4093?w=800&q=80', property_count: 85 },
+  { id: '3', name: 'Kodaikanal', state: 'Tamil Nadu', cover_image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=800&q=80', property_count: 60 },
+  { id: '4', name: 'Munnar', state: 'Kerala', cover_image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800&q=80', property_count: 95 },
+  { id: '5', name: 'Coorg', state: 'Karnataka', cover_image: 'https://images.unsplash.com/photo-1605649487212-47bdab064df7?w=800&q=80', property_count: 70 },
 ]
 
-function AnimatedCounter({ target, suffix = '' }: { target: number; suffix?: string }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef<HTMLSpanElement>(null)
-  const inView = useInView(ref, { once: true })
+const DEFAULT_TESTIMONIALS = [
+  { name: 'Priya R.', location: 'Bangalore', text: 'Found a stunning cottage in Coonoor for half the price of Booking.com. The owner picked us up from the station!', avatar: 'P' },
+  { name: 'Arjun M.', location: 'Mumbai', text: 'No commission means the host could afford to give us a proper home-cooked breakfast every morning. Loved it.', avatar: 'A' },
+  { name: 'Sneha K.', location: 'Chennai', text: 'Talking directly to our guide before the trip made all the difference. He customized everything for our family.', avatar: 'S' },
+]
 
+function s(settings: Record<string, string>, key: string, fallback = '') {
+  return settings[key] ?? fallback
+}
+function isOn(settings: Record<string, string>, key: string, def = true) {
+  const v = settings[key]
+  if (v === undefined) return def
+  return v === 'true' || v === '1'
+}
+
+function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: string }) {
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  const [count, setCount] = useState(0)
   useEffect(() => {
     if (!inView) return
-    let start = 0
-    const duration = 1500
-    const step = target / (duration / 16)
-    const timer = setInterval(() => {
-      start = Math.min(start + step, target)
-      setCount(Math.floor(start))
-      if (start >= target) clearInterval(timer)
+    const start = Date.now()
+    const dur = 1500
+    const id = setInterval(() => {
+      const t = Math.min(1, (Date.now() - start) / dur)
+      setCount(Math.floor(t * value))
+      if (t === 1) clearInterval(id)
     }, 16)
-    return () => clearInterval(timer)
-  }, [inView, target])
-
-  return <span ref={ref}>{count.toLocaleString('en-IN')}{suffix}</span>
+    return () => clearInterval(id)
+  }, [inView, value])
+  return <span ref={ref}>{count}{suffix}</span>
 }
 
-const AMENITY_ICONS: Record<string, string> = {
-  wifi: '📶', pool: '🏊', parking: '🅿️', kitchen: '🍳',
-  ac: '❄️', gym: '💪', spa: '🛁', pets: '🐾',
-}
-
-export default function LandingClient({ settings, destinations: rawDestinations }: Props) {
+export default function LandingClient({ settings, destinations }: Props) {
   const { user } = useSupabase()
   const router = useRouter()
-  const [searchQuery, setSearchQuery] = useState('')
+  const [scrolled, setScrolled] = useState(false)
+  const [destination, setDestination] = useState('')
 
-  const heroHeadline = settings.hero_headline || 'Discover India. Directly.'
-  const heroSub = settings.hero_subheadline || 'Book authentic stays, local guides & cabs — zero commission, pure experience'
-  const heroBg = settings.hero_bg_url || 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=1920&q=80'
-  const statsProperties = parseInt(settings.stats_properties || '500')
-  const statsGuides = parseInt(settings.stats_guides || '200')
-  const statsDestinations = parseInt(settings.stats_destinations || '50')
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
-  const destinations = rawDestinations.length > 0 ? rawDestinations : DEFAULT_DESTINATIONS as Destination[]
+  const showStats = isOn(settings, 'landing_stats_show')
+  const showHow = isOn(settings, 'landing_how_show')
+  const showDestinations = isOn(settings, 'landing_destinations_show')
+  const showWhy = isOn(settings, 'landing_why_show')
+  const showTestimonials = isOn(settings, 'landing_testimonials_show')
+  const showFinalCta = isOn(settings, 'landing_finalcta_show')
+  const showVendorStrip = isOn(settings, 'landing_vendor_strip_show')
 
-  let testimonials = []
+  const appName = s(settings, 'brand_app_name', 'GoMiGooo!')
+  const heroBg = s(settings, 'landing_hero_bg_image', 'https://images.unsplash.com/photo-1599661046827-9a64bd68a8da?w=2400&q=80')
+  const heroHeadline = s(settings, 'landing_hero_headline', 'Discover India.\nDirectly.')
+  const heroSub = s(settings, 'landing_hero_subheadline', 'Book authentic stays, local guides & cabs across India.')
+  const heroKicker = s(settings, 'landing_hero_kicker', 'Zero commission · 100% authentic')
+  const ctaPrimary = s(settings, 'landing_hero_cta_primary', 'Explore Stays')
+  const ctaPrimaryLink = s(settings, 'landing_hero_cta_primary_link', '/explore')
+  const ctaSecondary = s(settings, 'landing_hero_cta_secondary', 'Plan My Trip')
+  const ctaSecondaryLink = s(settings, 'landing_hero_cta_secondary_link', '/explore?tripPlanner=1')
+  const showSearch = isOn(settings, 'landing_hero_show_search')
+
+  const destItems = destinations.length > 0 ? destinations : DEFAULT_DESTINATIONS
+
+  let testimonials = DEFAULT_TESTIMONIALS
   try {
-    testimonials = JSON.parse(settings.testimonials_json || '[]')
-  } catch {}
-  if (testimonials.length === 0) {
-    testimonials = [
-      { name: 'Priya Sharma', location: 'Chennai', rating: 5, text: 'Found an amazing cottage in Coonoor! The owner was so responsive. No booking fees!', avatar: 'PS' },
-      { name: 'Rahul Nair', location: 'Bangalore', rating: 5, text: 'Zero-commission means owners actually care — personalized service we never got from big booking sites.', avatar: 'RN' },
-      { name: 'Meera K', location: 'Hyderabad', rating: 5, text: 'Our guide Suresh knew every hidden trail in the Nilgiris. Saved 20% vs other platforms!', avatar: 'MK' },
-    ]
-  }
+    const t = JSON.parse(s(settings, 'testimonials_json', '[]'))
+    if (Array.isArray(t) && t.length > 0) testimonials = t
+  } catch { /* keep defaults */ }
 
-  const starterPrice = settings.plan_starter_price || '299'
-  const proPrice = settings.plan_pro_price || '599'
-  const premiumPrice = settings.plan_premium_price || '999'
+  let exploreLinks: { label: string; href: string }[] = []
+  let companyLinks: { label: string; href: string }[] = []
+  let legalLinks: { label: string; href: string }[] = []
+  try { exploreLinks = JSON.parse(s(settings, 'landing_footer_explore_links', '[]')) } catch {}
+  try { companyLinks = JSON.parse(s(settings, 'landing_footer_company_links', '[]')) } catch {}
+  try { legalLinks = JSON.parse(s(settings, 'landing_footer_legal_links', '[]')) } catch {}
 
-  function handleExplore() {
-    if (user) router.push('/explore')
-    else router.push('/auth')
-  }
-
-  function handleSearch(e: React.FormEvent) {
+  function search(e: React.FormEvent) {
     e.preventDefault()
-    router.push(`/explore${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`)
+    const params = new URLSearchParams()
+    if (destination) params.set('search', destination)
+    router.push(`/explore${params.toString() ? '?' + params.toString() : ''}`)
   }
 
   return (
-    <div className="overflow-x-hidden">
-      {/* ─── NAVBAR ─── */}
-      <nav className="fixed top-0 inset-x-0 z-50 glass border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/landing" className="font-serif text-2xl font-bold text-forest-700">
-            GoMiGooo!
+    <div className="min-h-screen bg-warmwhite text-foreground">
+      {/* NAV */}
+      <nav className={`fixed top-0 inset-x-0 z-40 transition-all ${scrolled ? 'glass shadow-md' : 'bg-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link href="/" className={`font-serif text-2xl font-bold transition-colors ${scrolled ? 'text-foreground' : 'text-white'}`}>
+            {appName}
           </Link>
-          <div className="hidden md:flex items-center gap-6 text-sm">
-            <Link href="/explore" className="text-muted-foreground hover:text-forest-700 transition-colors">Explore</Link>
-            <Link href="#how-it-works" className="text-muted-foreground hover:text-forest-700 transition-colors">How it Works</Link>
-            <Link href="#pricing" className="text-muted-foreground hover:text-forest-700 transition-colors">For Owners</Link>
-          </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              href="/explore"
+              className={`hidden sm:inline-block text-sm font-medium px-3 py-2 rounded-lg transition-colors ${
+                scrolled ? 'hover:bg-muted text-foreground' : 'text-white/90 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              Explore
+            </Link>
+            <ThemeToggle className={scrolled ? '' : 'text-white/90 hover:text-white hover:bg-white/10'} />
             {user ? (
-              <Button asChild size="sm" className="bg-forest-700 hover:bg-forest-800 text-white">
-                <Link href="/explore">Explore Now</Link>
+              <Button asChild className="bg-forest-700 hover:bg-forest-800 text-white rounded-full px-4">
+                <Link href="/customer/dashboard"><User className="w-4 h-4 mr-1.5" />Account</Link>
               </Button>
             ) : (
-              <>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/auth">Sign In</Link>
-                </Button>
-                <Button size="sm" className="bg-forest-700 hover:bg-forest-800 text-white" asChild>
-                  <Link href="/auth">Get Started</Link>
-                </Button>
-              </>
+              <Button asChild className="bg-forest-700 hover:bg-forest-800 text-white rounded-full px-4">
+                <Link href="/auth"><LogIn className="w-4 h-4 mr-1.5" />Sign In</Link>
+              </Button>
             )}
           </div>
         </div>
       </nav>
 
-      {/* ─── HERO ─── */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background */}
+      {/* HERO */}
+      <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <Image
-            src={heroBg}
-            alt="Indian hill station"
-            fill
-            className="object-cover"
-            priority
-            quality={90}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+          <Image src={heroBg} alt="Hero" fill priority className="object-cover" sizes="100vw" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/85" />
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto pt-16">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Badge className="mb-6 bg-golden-400/20 text-golden-200 border-golden-400/30 backdrop-blur-sm">
-              🌿 Zero Commission · Pure Experience
-            </Badge>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-serif font-bold text-white leading-tight mb-6">
-              {heroHeadline}
-            </h1>
-            <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
-              {heroSub}
-            </p>
-          </motion.div>
+        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center text-white">
+          {heroKicker && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-xs sm:text-sm font-medium"
+            >
+              <span className="w-2 h-2 bg-golden-400 rounded-full animate-pulse" />
+              {heroKicker}
+            </motion.div>
+          )}
 
-          {/* Search Bar */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6 whitespace-pre-line text-balance"
+          >
+            {heroHeadline}
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="text-lg md:text-xl text-white/85 max-w-2xl mx-auto mb-8 text-balance"
+          >
+            {heroSub}
+          </motion.p>
+
+          {/* SEARCH BAR */}
+          {showSearch && (
+            <motion.form
+              onSubmit={search}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+              className="max-w-xl mx-auto mb-6"
+            >
+              <div className="flex gap-2 p-1.5 rounded-2xl bg-white/95 backdrop-blur-md shadow-2xl">
+                <div className="flex-1 flex items-center gap-2 px-3">
+                  <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+                  <Input
+                    placeholder="Where do you want to go? Ooty, Coorg, Munnar..."
+                    value={destination}
+                    onChange={e => setDestination(e.target.value)}
+                    className="border-0 shadow-none focus-visible:ring-0 text-foreground placeholder:text-muted-foreground bg-transparent h-11"
+                  />
+                </div>
+                <Button type="submit" className="bg-forest-700 hover:bg-forest-800 text-white rounded-xl px-6 h-11">
+                  Search
+                </Button>
+              </div>
+            </motion.form>
+          )}
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+            className="flex flex-wrap justify-center gap-3"
           >
-            <form onSubmit={handleSearch} className="glass rounded-2xl p-2 flex gap-2 max-w-2xl mx-auto mb-8">
-              <div className="flex items-center gap-2 flex-1 px-4">
-                <Search className="w-5 h-5 text-muted-foreground shrink-0" />
-                <Input
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Where in India? (Ooty, Nilgiris, Coorg...)"
-                  className="border-0 bg-transparent focus-visible:ring-0 text-foreground placeholder:text-muted-foreground text-base"
-                />
-              </div>
-              <Button type="submit" className="bg-forest-700 hover:bg-forest-800 text-white rounded-xl h-12 px-6 shrink-0">
-                Search
+            <Button asChild size="lg" className="bg-golden-500 hover:bg-golden-600 text-foreground rounded-full px-6 shadow-xl">
+              <Link href={ctaPrimaryLink}><Compass className="w-5 h-5 mr-2" />{ctaPrimary}</Link>
+            </Button>
+            {ctaSecondary && (
+              <Button asChild variant="outline" size="lg" className="border-white/40 bg-white/10 text-white hover:bg-white/20 rounded-full px-6 backdrop-blur-sm">
+                <Link href={ctaSecondaryLink}>{ctaSecondary}<ArrowRight className="w-4 h-4 ml-2" /></Link>
               </Button>
-            </form>
+            )}
+          </motion.div>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button
-                onClick={handleExplore}
-                size="lg"
-                className="bg-forest-700 hover:bg-forest-800 text-white rounded-xl h-13 px-8 text-base font-medium"
-              >
-                <Compass className="w-5 h-5 mr-2" />
-                Explore as Traveler
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="bg-white/10 hover:bg-white/20 text-white border-white/30 rounded-xl h-13 px-8 text-base font-medium backdrop-blur-sm"
-              >
-                <Link href="/auth">
-                  <Mountain className="w-5 h-5 mr-2" />
-                  List Your Business
-                </Link>
-              </Button>
+          {/* STATS */}
+          {showStats && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.6 }}
+              className="grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto mt-14 pt-8 border-t border-white/15"
+            >
+              {[
+                { v: parseInt(s(settings, 'landing_stat1_value', '500')), suf: s(settings, 'landing_stat1_suffix', '+'), lbl: s(settings, 'landing_stat1_label', 'Stays') },
+                { v: parseInt(s(settings, 'landing_stat2_value', '50')), suf: s(settings, 'landing_stat2_suffix', '+'), lbl: s(settings, 'landing_stat2_label', 'Guides') },
+                { v: parseInt(s(settings, 'landing_stat3_value', '5')), suf: s(settings, 'landing_stat3_suffix', ''), lbl: s(settings, 'landing_stat3_label', 'Cities') },
+              ].map((stat, i) => (
+                <div key={i}>
+                  <div className="text-3xl sm:text-4xl font-serif font-bold text-golden-400">
+                    <AnimatedCounter value={stat.v} suffix={stat.suf} />
+                  </div>
+                  <div className="text-xs sm:text-sm text-white/70 mt-1">{stat.lbl}</div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </div>
+
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/50 text-xs flex flex-col items-center gap-1 animate-bounce">
+          <span>Scroll</span>
+          <ChevronRight className="w-4 h-4 rotate-90" />
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      {showHow && (
+        <section className="py-20 px-4 bg-surface">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-14">
+              <h2 className="font-serif text-3xl md:text-5xl font-bold mb-3 text-balance">{s(settings, 'landing_how_title', 'How GoMiGooo! works')}</h2>
+              <p className="text-muted-foreground text-balance">{s(settings, 'landing_how_subtitle', 'Three simple steps to your next adventure')}</p>
             </div>
-          </motion.div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.8 }}
-            className="mt-16 grid grid-cols-3 gap-4 max-w-lg mx-auto"
-          >
-            {[
-              { label: 'Properties', value: statsProperties, suffix: '+' },
-              { label: 'Guides', value: statsGuides, suffix: '+' },
-              { label: 'Destinations', value: statsDestinations, suffix: '+' },
-            ].map(stat => (
-              <div key={stat.label} className="text-center">
-                <div className="text-3xl font-bold text-white">
-                  <AnimatedCounter target={stat.value} suffix={stat.suffix} />
-                </div>
-                <div className="text-white/60 text-sm mt-1">{stat.label}</div>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-1">
-            <div className="w-1.5 h-3 bg-white/50 rounded-full" />
-          </div>
-        </div>
-      </section>
-
-      {/* ─── HOW IT WORKS ─── */}
-      <section id="how-it-works" className="py-24 bg-warmwhite">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <Badge className="mb-4 bg-forest-50 text-forest-700 border-forest-200">Simple. Direct. Free.</Badge>
-            <h2 className="text-4xl font-serif font-bold text-foreground mb-4">How GoMiGooo! Works</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">No middlemen. No hidden fees. Just direct connections between travelers and local businesses.</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: <Compass className="w-8 h-8" />,
-                title: 'For Travelers',
-                color: 'forest',
-                steps: [
-                  { icon: <Search className="w-4 h-4" />, text: 'Search by destination, dates & type' },
-                  { icon: <MapPin className="w-4 h-4" />, text: 'Explore listings on an interactive map' },
-                  { icon: <Phone className="w-4 h-4" />, text: 'Call owner directly OR book online' },
-                  { icon: <CheckCircle className="w-4 h-4" />, text: 'Pay 20% advance, rest on arrival' },
-                ],
-              },
-              {
-                icon: <Mountain className="w-8 h-8" />,
-                title: 'For Property Owners',
-                color: 'golden',
-                steps: [
-                  { icon: <CheckCircle className="w-4 h-4" />, text: 'Subscribe (₹299–999/month only)' },
-                  { icon: <Map className="w-4 h-4" />, text: 'List your property with photos & map' },
-                  { icon: <Users className="w-4 h-4" />, text: 'Get direct booking requests' },
-                  { icon: <TrendingUp className="w-4 h-4" />, text: 'Earn 100% — zero commission, ever' },
-                ],
-              },
-              {
-                icon: <Shield className="w-8 h-8" />,
-                title: 'GoMiGooo! Promise',
-                color: 'forest',
-                steps: [
-                  { icon: <Zap className="w-4 h-4" />, text: 'Verified property photos only' },
-                  { icon: <Star className="w-4 h-4" />, text: 'Reviews from real verified guests' },
-                  { icon: <Shield className="w-4 h-4" />, text: 'Secure advance payment via Razorpay' },
-                  { icon: <CheckCircle className="w-4 h-4" />, text: '₹0 commission — always' },
-                ],
-              },
-            ].map((col, i) => (
-              <motion.div
-                key={col.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className={`rounded-2xl p-8 border ${
-                  col.color === 'golden'
-                    ? 'bg-golden-50 border-golden-200'
-                    : 'bg-forest-50 border-forest-100'
-                }`}
-              >
-                <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-5 ${
-                  col.color === 'golden' ? 'bg-golden-400 text-white' : 'bg-forest-700 text-white'
-                }`}>
-                  {col.icon}
-                </div>
-                <h3 className="text-xl font-serif font-semibold mb-4 text-foreground">{col.title}</h3>
-                <ul className="space-y-3">
-                  {col.steps.map((step, j) => (
-                    <li key={j} className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <span className={`shrink-0 ${col.color === 'golden' ? 'text-golden-600' : 'text-forest-700'}`}>
-                        {step.icon}
-                      </span>
-                      {step.text}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── DESTINATIONS ─── */}
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <Badge className="mb-4 bg-forest-50 text-forest-700 border-forest-200">🗺️ Start Exploring</Badge>
-            <h2 className="text-4xl font-serif font-bold text-foreground mb-4">Top Destinations</h2>
-            <p className="text-muted-foreground">Handpicked hill stations and nature escapes across South India</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {destinations.slice(0, 6).map((dest, i) => (
-              <motion.div
-                key={dest.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <Link
-                  href={`/explore?destination=${encodeURIComponent(dest.name)}`}
-                  className="group block rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 card-hover"
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                { icon: Search, t: s(settings, 'landing_how_step1_title', 'Discover'), d: s(settings, 'landing_how_step1_desc', '') },
+                { icon: Phone, t: s(settings, 'landing_how_step2_title', 'Connect'), d: s(settings, 'landing_how_step2_desc', '') },
+                { icon: Mountain, t: s(settings, 'landing_how_step3_title', 'Experience'), d: s(settings, 'landing_how_step3_desc', '') },
+              ].map((step, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  className="text-center p-6 rounded-2xl bg-card border border-border card-hover"
                 >
-                  <div className="relative h-52">
-                    {dest.cover_image ? (
-                      <Image
-                        src={dest.cover_image}
-                        alt={dest.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
+                  <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-forest-50 dark:bg-forest-950 flex items-center justify-center text-forest-700 dark:text-forest-400">
+                    <step.icon className="w-7 h-7" />
+                  </div>
+                  <div className="text-xs font-bold text-golden-600 mb-1">STEP {i + 1}</div>
+                  <h3 className="font-serif text-xl font-semibold mb-2">{step.t}</h3>
+                  <p className="text-sm text-muted-foreground">{step.d}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* DESTINATIONS */}
+      {showDestinations && (
+        <section className="py-20 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-14">
+              <h2 className="font-serif text-3xl md:text-5xl font-bold mb-3 text-balance">{s(settings, 'landing_destinations_title', 'Explore Top Destinations')}</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto text-balance">{s(settings, 'landing_destinations_subtitle', '')}</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+              {destItems.slice(0, 6).map((d, i) => (
+                <motion.div
+                  key={d.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.05 }}
+                >
+                  <Link
+                    href={`/explore?city=${encodeURIComponent(d.name)}`}
+                    className="group block relative h-64 sm:h-72 rounded-3xl overflow-hidden card-hover"
+                  >
+                    {d.cover_image ? (
+                      <Image src={d.cover_image} alt={d.name} fill sizes="(max-width:640px) 100vw, 33vw" className="object-cover group-hover:scale-110 transition-transform duration-700" />
                     ) : (
                       <div className="w-full h-full gradient-hero" />
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    <div className="absolute bottom-4 left-4 text-white">
-                      <h3 className="text-xl font-serif font-bold">{dest.name}</h3>
-                      <div className="flex items-center gap-1 text-sm text-white/80 mt-1">
-                        <MapPin className="w-3 h-3" />
-                        {dest.state}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+                      <h3 className="font-serif text-2xl font-bold mb-1">{d.name}</h3>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-1 opacity-90"><MapPin className="w-3.5 h-3.5" />{d.state}</span>
+                        {d.property_count > 0 && (
+                          <span className="px-2.5 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-medium">{d.property_count} stays</span>
+                        )}
                       </div>
                     </div>
-                    <div className="absolute top-4 right-4">
-                      <Badge className="bg-black/30 text-white border-transparent backdrop-blur-sm text-xs">
-                        {dest.property_count || 0}+ stays
-                      </Badge>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* WHY GOMIGOOO */}
+      {showWhy && (
+        <section className="py-20 px-4 bg-surface">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-14">
+              <h2 className="font-serif text-3xl md:text-5xl font-bold mb-3 text-balance">{s(settings, 'landing_why_title', 'Why travelers love GoMiGooo!')}</h2>
+              <p className="text-muted-foreground text-balance">{s(settings, 'landing_why_subtitle', '')}</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-5">
+              {[
+                { icon: IndianRupee, t: s(settings, 'landing_why_point1_title', ''), d: s(settings, 'landing_why_point1_desc', '') },
+                { icon: Phone, t: s(settings, 'landing_why_point2_title', ''), d: s(settings, 'landing_why_point2_desc', '') },
+                { icon: Shield, t: s(settings, 'landing_why_point3_title', ''), d: s(settings, 'landing_why_point3_desc', '') },
+                { icon: CheckCircle, t: s(settings, 'landing_why_point4_title', ''), d: s(settings, 'landing_why_point4_desc', '') },
+              ].map((p, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.05 }}
+                  className="flex gap-4 p-6 rounded-2xl bg-card border border-border card-hover"
+                >
+                  <div className="shrink-0 w-12 h-12 rounded-xl bg-forest-50 dark:bg-forest-950 flex items-center justify-center text-forest-700 dark:text-forest-400">
+                    <p.icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-xl font-semibold mb-1">{p.t}</h3>
+                    <p className="text-sm text-muted-foreground">{p.d}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* TESTIMONIALS */}
+      {showTestimonials && (
+        <section className="py-20 px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-14">
+              <h2 className="font-serif text-3xl md:text-5xl font-bold text-balance">{s(settings, 'landing_testimonials_title', 'Travelers love what they find')}</h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-5">
+              {testimonials.slice(0, 6).map((t, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.05 }}
+                  className="p-6 rounded-2xl bg-card border border-border"
+                >
+                  <div className="flex gap-0.5 mb-3">
+                    {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 fill-golden-400 text-golden-400" />)}
+                  </div>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-4">&ldquo;{t.text}&rdquo;</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-forest-700 text-white flex items-center justify-center text-sm font-bold">{t.avatar}</div>
+                    <div>
+                      <div className="font-medium text-sm">{t.name}</div>
+                      <div className="text-xs text-muted-foreground">{t.location}</div>
                     </div>
                   </div>
-                </Link>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
           </div>
+        </section>
+      )}
 
-          <div className="text-center mt-10">
-            <Button asChild variant="outline" size="lg" className="rounded-xl border-forest-700 text-forest-700 hover:bg-forest-50">
-              <Link href="/explore">
-                View all destinations <ArrowRight className="w-4 h-4 ml-2" />
+      {/* FINAL CTA */}
+      {showFinalCta && (
+        <section className="py-24 px-4 gradient-hero text-white">
+          <div className="max-w-3xl mx-auto text-center">
+            <Heart className="w-12 h-12 mx-auto mb-4 text-golden-400" />
+            <h2 className="font-serif text-3xl md:text-5xl font-bold mb-4 text-balance">{s(settings, 'landing_finalcta_title', 'Ready to explore?')}</h2>
+            <p className="text-lg text-white/85 mb-8 max-w-xl mx-auto text-balance">{s(settings, 'landing_finalcta_subtitle', '')}</p>
+            <Button asChild size="lg" className="bg-golden-500 hover:bg-golden-600 text-foreground rounded-full px-8 shadow-2xl">
+              <Link href={s(settings, 'landing_finalcta_button_link', '/explore')}>
+                <Compass className="w-5 h-5 mr-2" />{s(settings, 'landing_finalcta_button', 'Start Exploring')}
               </Link>
             </Button>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* ─── OWNER VALUE PROP + PRICING ─── */}
-      <section id="pricing" className="py-24 bg-warmwhite">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-4"
-          >
-            <Badge className="mb-4 bg-golden-50 text-golden-700 border-golden-200">🏆 For Business Owners</Badge>
-            <h2 className="text-4xl font-serif font-bold text-foreground mb-4">Keep 100% of Your Earnings</h2>
-          </motion.div>
-
-          {/* Comparison */}
-          <div className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto mb-16">
-            <div className="flex-1 rounded-xl bg-red-50 border border-red-100 p-5 text-center">
-              <div className="text-lg font-bold text-red-700 mb-1">Booking.com / OYO</div>
-              <div className="text-3xl font-bold text-red-600">15–25%</div>
-              <div className="text-sm text-red-500 mt-1">commission on every booking</div>
-            </div>
-            <div className="flex items-center justify-center text-2xl font-bold text-muted-foreground">VS</div>
-            <div className="flex-1 rounded-xl bg-forest-50 border border-forest-200 p-5 text-center">
-              <div className="text-lg font-bold text-forest-700 mb-1">GoMiGooo!</div>
-              <div className="text-3xl font-bold text-forest-700">₹0</div>
-              <div className="text-sm text-forest-600 mt-1">commission — only flat subscription</div>
-            </div>
+      {/* VENDOR INVITE STRIP — subtle, not pushy */}
+      {showVendorStrip && (
+        <section className="py-6 px-4 bg-card border-y border-border">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-3 text-center sm:text-left">
+            <span className="text-sm text-muted-foreground">{s(settings, 'landing_vendor_strip_text', '')}</span>
+            <Link
+              href={s(settings, 'landing_vendor_strip_link', '/become-vendor')}
+              className="text-sm font-semibold text-forest-700 dark:text-forest-400 hover:underline inline-flex items-center gap-1"
+            >
+              {s(settings, 'landing_vendor_strip_cta', 'Join as a Vendor')}
+            </Link>
           </div>
+        </section>
+      )}
 
-          {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {[
-              {
-                name: 'Starter', price: starterPrice, popular: false,
-                features: ['1 listing', 'Up to 10 photos', 'Basic booking management', 'Direct customer calls', 'Verified listing badge'],
-              },
-              {
-                name: 'Pro', price: proPrice, popular: true,
-                features: ['Up to 3 listings', 'Up to 30 photos', 'Booking calendar', 'Revenue tracker', 'Priority in search', 'Analytics dashboard'],
-              },
-              {
-                name: 'Premium', price: premiumPrice, popular: false,
-                features: ['Unlimited listings', 'Unlimited photos', 'AI listing descriptions', 'Full analytics', 'Top placement', 'Dedicated support'],
-              },
-            ].map((plan, i) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`rounded-2xl p-6 border relative ${
-                  plan.popular
-                    ? 'bg-forest-700 text-white border-forest-600 shadow-xl scale-105'
-                    : 'bg-white border-border shadow-md'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-golden-400 text-white border-transparent px-3 py-1">Most Popular</Badge>
-                  </div>
-                )}
-                <div className={`text-lg font-semibold mb-2 ${plan.popular ? 'text-white' : 'text-foreground'}`}>{plan.name}</div>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className={`text-4xl font-bold font-serif ${plan.popular ? 'text-white' : 'text-forest-700'}`}>
-                    ₹{parseInt(plan.price).toLocaleString('en-IN')}
-                  </span>
-                  <span className={`text-sm ${plan.popular ? 'text-white/70' : 'text-muted-foreground'}`}>/month</span>
-                </div>
-                <p className={`text-sm mb-6 ${plan.popular ? 'text-white/70' : 'text-muted-foreground'}`}>+ 0% commission</p>
-                <ul className="space-y-2 mb-6">
-                  {plan.features.map(f => (
-                    <li key={f} className={`flex items-center gap-2 text-sm ${plan.popular ? 'text-white/90' : 'text-muted-foreground'}`}>
-                      <CheckCircle className={`w-4 h-4 shrink-0 ${plan.popular ? 'text-golden-300' : 'text-forest-700'}`} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  asChild
-                  className={`w-full rounded-xl ${
-                    plan.popular
-                      ? 'bg-golden-400 hover:bg-golden-500 text-white'
-                      : 'bg-forest-700 hover:bg-forest-800 text-white'
-                  }`}
-                >
-                  <Link href="/auth">Get Started →</Link>
-                </Button>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── TESTIMONIALS ─── */}
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <Badge className="mb-4 bg-forest-50 text-forest-700 border-forest-200">⭐ Real Reviews</Badge>
-            <h2 className="text-4xl font-serif font-bold text-foreground mb-4">Loved by Travelers & Owners</h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t: { name: string; location: string; rating: number; text: string; avatar: string }, i: number) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-warmwhite rounded-2xl p-6 border border-border card-hover"
-              >
-                <div className="flex gap-1 mb-3">
-                  {Array.from({ length: t.rating }).map((_, j) => (
-                    <Star key={j} className="w-4 h-4 fill-golden-400 text-golden-400" />
-                  ))}
-                </div>
-                <p className="text-muted-foreground text-sm leading-relaxed mb-4">&ldquo;{t.text}&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-forest-700 flex items-center justify-center text-white text-sm font-bold">
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm text-foreground">{t.name}</div>
-                    <div className="text-xs text-muted-foreground">{t.location}</div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Trust badges */}
-          <div className="flex flex-wrap justify-center gap-6 mt-12">
-            {[
-              { icon: <Shield className="w-5 h-5" />, text: 'Verified real photos only' },
-              { icon: <CheckCircle className="w-5 h-5" />, text: 'Confirmed stay reviews' },
-              { icon: <Zap className="w-5 h-5" />, text: 'Secure Razorpay payments' },
-              { icon: <Star className="w-5 h-5" />, text: 'SuperHost verified owners' },
-            ].map(badge => (
-              <div key={badge.text} className="flex items-center gap-2 text-sm text-forest-700 bg-forest-50 border border-forest-100 rounded-full px-4 py-2">
-                {badge.icon}
-                {badge.text}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── FINAL CTA ─── */}
-      <section className="py-24 gradient-hero text-white">
-        <div className="max-w-3xl mx-auto text-center px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl sm:text-5xl font-serif font-bold mb-6">
-              Ready to Discover India?
-            </h2>
-            <p className="text-white/80 text-lg mb-8">
-              Join thousands of travelers experiencing authentic India without the booking fee markup.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                onClick={handleExplore}
-                size="lg"
-                className="bg-golden-400 hover:bg-golden-500 text-white rounded-xl h-13 px-8 text-base"
-              >
-                Start Exploring Free
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="text-white border-white/40 hover:bg-white/10 rounded-xl h-13 px-8 text-base"
-              >
-                <Link href="/auth">List Your Business</Link>
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ─── FOOTER ─── */}
-      <footer className="bg-forest-900 text-white/70 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+      {/* FOOTER */}
+      <footer className="bg-surface border-t border-border py-14 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
             <div className="col-span-2 md:col-span-1">
-              <h3 className="font-serif text-2xl font-bold text-white mb-3">GoMiGooo!</h3>
-              <p className="text-sm leading-relaxed mb-4">
-                India&apos;s first zero-commission tourism marketplace. Connecting travelers with authentic local experiences.
-              </p>
-              <div className="flex gap-3">
-                {[Share2, Share2, Share2].map((Icon, i) => (
-                  <a key={i} href="#" className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-                    <Icon className="w-4 h-4" />
-                  </a>
-                ))}
-              </div>
+              <h3 className="font-serif text-2xl font-bold text-forest-700 dark:text-forest-400 mb-3">{appName}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{s(settings, 'landing_footer_about', '')}</p>
             </div>
             <div>
-              <h4 className="font-medium text-white mb-3">Explore</h4>
-              <ul className="space-y-2 text-sm">
-                {['Destinations', 'Hotels & Cottages', 'Tour Guides', 'Cab Services', 'Local Shops'].map(link => (
-                  <li key={link}><Link href="/explore" className="hover:text-white transition-colors">{link}</Link></li>
+              <h4 className="font-medium mb-3 text-sm">Explore</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {exploreLinks.map((l, i) => (
+                  <li key={i}><Link href={l.href} className="hover:text-foreground transition-colors">{l.label}</Link></li>
                 ))}
               </ul>
             </div>
             <div>
-              <h4 className="font-medium text-white mb-3">For Owners</h4>
-              <ul className="space-y-2 text-sm">
-                {['List Your Property', 'Pricing Plans', 'Owner Dashboard', 'How Payouts Work', 'Become a Guide'].map(link => (
-                  <li key={link}><Link href="/auth" className="hover:text-white transition-colors">{link}</Link></li>
+              <h4 className="font-medium mb-3 text-sm">Company</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {companyLinks.map((l, i) => (
+                  <li key={i}><Link href={l.href} className="hover:text-foreground transition-colors">{l.label}</Link></li>
                 ))}
               </ul>
             </div>
             <div>
-              <h4 className="font-medium text-white mb-3">Company</h4>
-              <ul className="space-y-2 text-sm">
-                {['About Us', 'Contact', 'Privacy Policy', 'Terms of Service', 'Refund Policy'].map(link => (
-                  <li key={link}><a href="#" className="hover:text-white transition-colors">{link}</a></li>
+              <h4 className="font-medium mb-3 text-sm">Legal</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {legalLinks.map((l, i) => (
+                  <li key={i}><Link href={l.href} className="hover:text-foreground transition-colors">{l.label}</Link></li>
                 ))}
               </ul>
-              <div className="mt-4">
-                <p className="text-xs mb-2">App coming soon</p>
-                <div className="flex gap-2">
-                  <div className="text-xs bg-white/10 rounded-lg px-3 py-2">App Store</div>
-                  <div className="text-xs bg-white/10 rounded-lg px-3 py-2">Google Play</div>
-                </div>
-              </div>
             </div>
           </div>
-          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs">
-            <p>© {new Date().getFullYear()} GoMiGooo! All rights reserved. Starting with The Nilgiris.</p>
-            <p>Made with ❤️ in India</p>
+          <div className="pt-8 border-t border-border text-xs text-muted-foreground text-center">
+            {s(settings, 'landing_footer_copyright', '')}
           </div>
         </div>
       </footer>
