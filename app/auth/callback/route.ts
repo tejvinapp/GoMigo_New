@@ -7,9 +7,22 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/explore'
 
+  // OAuth provider returned an error directly (e.g. user cancelled, redirect mismatch)
+  const oauthError = searchParams.get('error')
+  const oauthErrorDescription = searchParams.get('error_description')
+  if (oauthError) {
+    const params = new URLSearchParams({ error: oauthError, msg: oauthErrorDescription ?? '' })
+    return NextResponse.redirect(`${origin}/auth?${params}`)
+  }
+
   if (code) {
     const supabase = await createClient()
     const { error, data } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (error) {
+      const params = new URLSearchParams({ error: 'exchange_failed', msg: error.message })
+      return NextResponse.redirect(`${origin}/auth?${params}`)
+    }
 
     if (!error && data.user) {
       // Check if user has completed onboarding + role-based redirect

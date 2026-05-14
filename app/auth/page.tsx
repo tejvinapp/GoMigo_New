@@ -8,18 +8,24 @@ export const metadata: Metadata = {
   description: 'Sign in to GoMiGooo! to discover authentic stays, guides & cabs across India.',
 }
 
-export default async function AuthPage() {
+export default async function AuthPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; msg?: string; next?: string }>
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (user) {
     const { data } = await supabase.from('users').select('onboarding_done').eq('id', user.id).single()
-    if (data?.onboarding_done) {
+    const u = data as { onboarding_done?: boolean } | null
+    if (u?.onboarding_done) {
       redirect('/explore')
     } else {
       redirect('/onboarding')
     }
   }
 
-  return <AuthForm />
+  const params = await searchParams
+  return <AuthForm errorCode={params.error} errorMessage={params.msg} next={params.next} />
 }

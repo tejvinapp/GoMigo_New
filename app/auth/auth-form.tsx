@@ -2,37 +2,82 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import Image from 'next/image'
+import Link from 'next/link'
+import { AlertCircle } from 'lucide-react'
 
-export default function AuthForm() {
+const ERROR_MESSAGES: Record<string, string> = {
+  auth_failed: 'Sign-in failed. Please try again.',
+  exchange_failed: 'Could not complete sign-in. Please try again.',
+  access_denied: 'You cancelled the sign-in. No worries — try again whenever you like.',
+  redirect_uri_mismatch: 'The Google OAuth client is misconfigured. The redirect URI does not match what Google expects.',
+  unauthorized_client: 'The Google OAuth client is not allowed to use this redirect URI.',
+  invalid_request: 'The sign-in request was malformed.',
+  server_error: 'Google had a temporary problem. Please try again in a minute.',
+  temporarily_unavailable: 'Google is temporarily down. Please try again in a minute.',
+}
+
+export default function AuthForm({
+  errorCode,
+  errorMessage,
+  next,
+}: {
+  errorCode?: string
+  errorMessage?: string
+  next?: string
+}) {
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
 
+  // Surface error param as a toast on mount
+  useEffect(() => {
+    if (errorCode) {
+      const friendly = ERROR_MESSAGES[errorCode] ?? errorMessage ?? `Sign-in failed (${errorCode})`
+      toast.error(friendly, { duration: 8000 })
+    }
+  }, [errorCode, errorMessage])
+
   async function handleGoogleSignIn() {
     setLoading(true)
+    const redirectTo = next
+      ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
+      : `${window.location.origin}/auth/callback`
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo,
         queryParams: { access_type: 'offline', prompt: 'consent' },
       },
     })
     if (error) {
-      toast.error('Sign in failed. Please try again.')
+      toast.error('Sign in failed: ' + error.message)
       setLoading(false)
     }
   }
+
+  const visibleError = errorCode ? (ERROR_MESSAGES[errorCode] ?? errorMessage ?? `Sign-in failed (${errorCode})`) : null
 
   return (
     <div className="min-h-screen bg-warmwhite flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-serif font-bold text-forest-700">GoMiGooo!</h1>
+          <h1 className="text-4xl font-serif font-bold text-forest-700 dark:text-forest-400">GoMiGooo!</h1>
           <p className="text-muted-foreground mt-2 text-sm">Discover India. Directly.</p>
         </div>
+
+        {/* Error banner */}
+        {visibleError && (
+          <div className="mb-4 p-3 rounded-xl border border-red-200 dark:border-red-900 bg-red-50/70 dark:bg-red-950/40 flex gap-2 items-start">
+            <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+            <div className="flex-1 text-sm">
+              <div className="font-medium text-red-700 dark:text-red-300">Couldn&apos;t sign you in</div>
+              <p className="text-xs text-red-700/80 dark:text-red-400/80 mt-0.5">{visibleError}</p>
+            </div>
+          </div>
+        )}
 
         {/* Card */}
         <div className="glass rounded-2xl p-8 shadow-xl">
@@ -95,18 +140,18 @@ export default function AuthForm() {
 
           <p className="text-center text-xs text-muted-foreground mt-4">
             By signing in, you agree to our{' '}
-            <a href="#" className="text-forest-700 hover:underline">Terms</a> &{' '}
-            <a href="#" className="text-forest-700 hover:underline">Privacy Policy</a>
+            <Link href="/terms" className="text-forest-700 dark:text-forest-400 hover:underline">Terms</Link> &{' '}
+            <Link href="/privacy" className="text-forest-700 dark:text-forest-400 hover:underline">Privacy Policy</Link>
           </p>
         </div>
 
-        {/* Owner CTA */}
+        {/* Vendor CTA */}
         <div className="mt-4 text-center">
           <p className="text-sm text-muted-foreground">
             Are you a property owner, guide or cab driver?{' '}
-            <a href="#" onClick={handleGoogleSignIn} className="text-forest-700 font-medium hover:underline">
+            <Link href="/become-vendor" className="text-forest-700 dark:text-forest-400 font-medium hover:underline">
               List your business →
-            </a>
+            </Link>
           </p>
         </div>
       </div>
