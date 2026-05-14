@@ -2,11 +2,14 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Image from 'next/image'
 import Link from 'next/link'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, Mail, Lock } from 'lucide-react'
 
 const ERROR_MESSAGES: Record<string, string> = {
   auth_failed: 'Sign-in failed. Please try again.',
@@ -28,7 +31,13 @@ export default function AuthForm({
   errorMessage?: string
   next?: string
 }) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [emailLoading, setEmailLoading] = useState(false)
+  const [mode, setMode] = useState<'google' | 'email'>('google')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isSignUp, setIsSignUp] = useState(false)
   const supabase = createClient()
 
   // Surface error param as a toast on mount
@@ -38,6 +47,39 @@ export default function AuthForm({
       toast.error(friendly, { duration: 8000 })
     }
   }, [errorCode, errorMessage])
+
+  async function handleEmailAuth(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email || !password || password.length < 6) {
+      toast.error('Enter your email and a password (at least 6 characters)')
+      return
+    }
+    setEmailLoading(true)
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      })
+      if (error) {
+        toast.error('Sign up failed: ' + error.message)
+        setEmailLoading(false)
+        return
+      }
+      toast.success('Account created — check your email if confirmation is needed, otherwise log in below')
+      setIsSignUp(false)
+      setEmailLoading(false)
+      return
+    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      toast.error('Sign-in failed: ' + error.message)
+      setEmailLoading(false)
+      return
+    }
+    toast.success('Welcome back!')
+    router.push(next ?? '/explore')
+  }
 
   async function handleGoogleSignIn() {
     setLoading(true)
@@ -137,6 +179,62 @@ export default function AuthForm({
               </span>
             )}
           </Button>
+
+          {/* Divider */}
+          <div className="my-4 flex items-center gap-3">
+            <div className="flex-1 border-t border-border" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="flex-1 border-t border-border" />
+          </div>
+
+          {/* Email/Password form */}
+          <form onSubmit={handleEmailAuth} className="space-y-3">
+            <div>
+              <Label htmlFor="email" className="text-xs">Email</Label>
+              <div className="relative mt-1">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="pl-9 h-10"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="password" className="text-xs">Password</Label>
+              <div className="relative mt-1">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Min 6 characters"
+                  className="pl-9 h-10"
+                  required
+                  minLength={6}
+                />
+              </div>
+            </div>
+            <Button
+              type="submit"
+              disabled={emailLoading}
+              className="w-full h-10 bg-forest-700 hover:bg-forest-800 text-white rounded-xl"
+            >
+              {emailLoading ? 'Please wait...' : (isSignUp ? 'Create account' : 'Sign in')}
+            </Button>
+            <button
+              type="button"
+              onClick={() => setIsSignUp(s => !s)}
+              className="w-full text-xs text-muted-foreground hover:text-foreground"
+            >
+              {isSignUp ? 'Already have an account? Sign in instead' : "Don't have an account? Sign up"}
+            </button>
+          </form>
 
           <p className="text-center text-xs text-muted-foreground mt-4">
             By signing in, you agree to our{' '}
