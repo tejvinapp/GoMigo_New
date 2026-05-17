@@ -23,7 +23,7 @@ export default async function GuidesPage() {
   const { data: guides } = await supabase
     .from('guides')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('owner_id', user.id)
     .order('created_at', { ascending: false })
 
   return (

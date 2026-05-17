@@ -120,34 +120,37 @@ export default function OwnerVendorClient({ role, user, items }: Props) {
       payload = {
         owner_id: authUser.id,
         vehicle_type: vehicleType,
+        vehicle_name: registrationNumber.trim().toUpperCase(),  // schema column is `vehicle_name`
         seats: parseInt(seats),
-        has_ac: hasAc,
+        ac: hasAc,                                              // schema column is `ac`, not `has_ac`
         price_per_km: parseFloat(pricePerKm) || 0,
         price_per_day: parseFloat(pricePerDay) || 0,
-        registration_number: registrationNumber.trim().toUpperCase(),
+        city: 'Ooty',
+        lat: 11.4102,
+        lng: 76.6950,
       }
     } else if (role === 'guide') {
       table = 'guides'
       payload = {
-        user_id: authUser.id,
+        owner_id: authUser.id,                                  // schema column is `owner_id`, not `user_id`
+        name: name.trim() || (specialties.split(',')[0]?.trim() || 'Local Guide'),
+        bio: bio.trim() + (experienceYears ? `\n\n${experienceYears} years experience.` : ''),
         specialties: specialties.split(',').map(s => s.trim()).filter(Boolean),
         languages: languages.split(',').map(s => s.trim()).filter(Boolean),
-        experience_years: parseInt(experienceYears) || 0,
         price_per_day: parseFloat(pricePerDay) || 0,
-        bio: bio.trim(),
-        certifications: [],
       }
     } else {
       table = 'shops'
       payload = {
         owner_id: authUser.id,
-        shop_type: shopType,
         name: name.trim(),
+        type: shopType,                                          // schema column is `type`, not `shop_type`
         description: description.trim(),
-        lat: 11.4102,  // default to Ooty until we add a map picker
+        location: city.trim() || 'Ooty',
+        lat: 11.4102,
         lng: 76.6950,
         city: city.trim() || 'Ooty',
-        hours,
+        timings: hours,                                          // schema column is `timings`, not `hours`
       }
     }
 
@@ -273,8 +276,8 @@ export default function OwnerVendorClient({ role, user, items }: Props) {
                         </div>
                       </div>
                       <div>
-                        <Label htmlFor="reg">Registration Number</Label>
-                        <Input id="reg" value={registrationNumber} onChange={e => setRegistrationNumber(e.target.value)} placeholder="TN 43 AB 1234" required />
+                        <Label htmlFor="reg">Vehicle Name / Registration #</Label>
+                        <Input id="reg" value={registrationNumber} onChange={e => setRegistrationNumber(e.target.value)} placeholder="TN 43 AB 1234 or 'My Innova'" required />
                       </div>
                       <div className="grid sm:grid-cols-2 gap-3">
                         <div>
@@ -418,10 +421,10 @@ function ItemCard({ role, item }: { role: Role; item: Item }) {
           <div className="flex items-start justify-between gap-2 mb-2">
             <div>
               <div className="font-semibold">{item.vehicle_type}</div>
-              <div className="text-xs text-muted-foreground font-mono">{item.registration_number}</div>
+              <div className="text-xs text-muted-foreground font-mono">{item.vehicle_name}</div>
             </div>
             <Badge className="bg-forest-50 dark:bg-forest-950 text-forest-700 dark:text-forest-400 border-forest-200 dark:border-forest-900 text-xs">
-              {item.seats} seats {item.has_ac ? '· AC' : ''}
+              {item.seats} seats {item.ac ? '· AC' : ''}
             </Badge>
           </div>
           <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
@@ -443,19 +446,21 @@ function ItemCard({ role, item }: { role: Role; item: Item }) {
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
-            <div className="font-semibold">Guide profile</div>
-            <Badge className="bg-forest-50 dark:bg-forest-950 text-forest-700 dark:text-forest-400 border-forest-200 dark:border-forest-900 text-xs">
-              {item.experience_years} yrs
-            </Badge>
+            <div className="font-semibold">{item.name || 'Guide profile'}</div>
+            {item.verified && (
+              <Badge className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 border-green-200 dark:border-green-900 text-xs">
+                Verified
+              </Badge>
+            )}
           </div>
-          <div className="text-xs text-muted-foreground mb-2">
+          <div className="text-xs text-muted-foreground mb-1">
             <strong>Languages:</strong> {(item.languages ?? []).join(', ')}
           </div>
           <div className="text-xs text-muted-foreground mb-2">
             <strong>Specialties:</strong> {(item.specialties ?? []).join(', ')}
           </div>
           <div className="text-sm font-semibold mt-2">₹{item.price_per_day} / day</div>
-          {item.bio && <p className="text-xs text-muted-foreground mt-2 line-clamp-3">{item.bio}</p>}
+          {item.bio && <p className="text-xs text-muted-foreground mt-2 line-clamp-3 whitespace-pre-line">{item.bio}</p>}
         </CardContent>
       </Card>
     )
@@ -466,10 +471,10 @@ function ItemCard({ role, item }: { role: Role; item: Item }) {
         <div className="flex items-start justify-between gap-2 mb-2">
           <div>
             <div className="font-semibold">{item.name}</div>
-            <div className="text-xs text-muted-foreground">{item.shop_type} · {item.city}</div>
+            <div className="text-xs text-muted-foreground">{item.type} · {item.city}</div>
           </div>
         </div>
-        {item.hours && <div className="text-xs text-muted-foreground mt-1">{item.hours}</div>}
+        {item.timings && <div className="text-xs text-muted-foreground mt-1">{item.timings}</div>}
         {item.description && <p className="text-xs text-muted-foreground mt-2 line-clamp-3">{item.description}</p>}
       </CardContent>
     </Card>
