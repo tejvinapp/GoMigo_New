@@ -54,6 +54,15 @@ export default function BecomeVendorClient({ currentRole, userEmail }: { current
 
   async function applyRole(role: string, dashboard: string) {
     if (!user) return
+    // Safeguard: don't let admins accidentally downgrade themselves
+    if (currentRole === 'admin') {
+      const ok = confirm(
+        'You are currently an ADMIN. Switching to ' + role.replace('_', ' ') +
+        ' will REMOVE your admin access. Are you sure?\n\n' +
+        '(You can restore admin via the Supabase dashboard or another admin can restore you.)'
+      )
+      if (!ok) return
+    }
     setSubmitting(true)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from('users') as any)

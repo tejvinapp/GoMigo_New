@@ -29,27 +29,7 @@ export default async function AdminDashboardPage() {
   ])
 
   return (
-    <div className="min-h-screen bg-warmwhite flex">
-      <aside className="hidden md:flex w-56 bg-card border-r border-border flex-col p-4 shrink-0">
-        <Link href="/landing" className="font-serif text-xl font-bold text-forest-700 mb-4 block">GoMiGooo!</Link>
-        <Badge className="mb-4 bg-red-50 text-red-700 border-red-200 text-xs w-fit">Admin Panel</Badge>
-        <nav className="space-y-1">
-          {[
-            { href: '/admin/dashboard', icon: <BarChart2 className="w-4 h-4" />, label: 'Dashboard', active: true },
-            { href: '/admin/users', icon: <Users className="w-4 h-4" />, label: 'Users' },
-            { href: '/admin/subscriptions', icon: <Package className="w-4 h-4" />, label: 'Subscriptions' },
-            { href: '/admin/photos', icon: <Image className="w-4 h-4" />, label: 'Photo Moderation' },
-            { href: '/admin/kyc', icon: <FileCheck className="w-4 h-4" />, label: 'KYC Verification' },
-            { href: '/admin/settings', icon: <Settings className="w-4 h-4" />, label: 'Settings' },
-          ].map(item => (
-            <Link key={item.href} href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${item.active ? 'bg-forest-700 text-white' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
-              {item.icon}{item.label}
-            </Link>
-          ))}
-        </nav>
-      </aside>
-
-      <main className="flex-1 p-4 sm:p-6 overflow-auto">
+    <main className="max-w-7xl mx-auto p-4 sm:p-6">
         <h1 className="text-2xl font-serif font-bold mb-6">Admin Overview</h1>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -122,7 +102,6 @@ export default async function AdminDashboardPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+    </main>
   )
 }

@@ -1,147 +1,22 @@
-'use client'
+import { createClient } from '@/lib/supabase/server'
+import SubscriptionsClient from './subscriptions-client'
+import type { Metadata } from 'next'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { ArrowLeft, Crown, AlertTriangle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useSupabase } from '@/components/providers'
-import { toast } from 'sonner'
-import { format } from 'date-fns'
+export const metadata: Metadata = { title: 'Admin · Subscriptions' }
+export const dynamic = 'force-dynamic'
 
-const planColors: Record<string, string> = {
-  starter: 'bg-blue-100 text-blue-700',
-  pro: 'bg-green-100 text-green-700',
-  premium: 'bg-yellow-100 text-yellow-700',
-}
+export default async function AdminSubscriptionsPage() {
+  const supabase = await createClient()
+  const { data: subs } = await supabase
+    .from('subscriptions')
+    .select(`
+      *,
+      owner:owner_id(id, name, email, phone)
+    `)
+    .order('created_at', { ascending: false })
 
-const statusColors: Record<string, string> = {
-  active: 'bg-green-100 text-green-700',
-  past_due: 'bg-red-100 text-red-700',
-  cancelled: 'bg-gray-100 text-gray-700',
-  trial: 'bg-purple-100 text-purple-700',
-}
-
-export default function AdminSubscriptionsPage() {
-  const { supabase } = useSupabase()
-  const [subs, setSubs] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchSubs()
-  }, [])
-
-  async function fetchSubs() {
-    const { data } = await supabase
-      .from('subscriptions')
-      .select(`
-        *,
-        owner:owner_id(id, name, email, phone)
-      `)
-      .order('created_at', { ascending: false })
-    setSubs(data ?? [])
-    setLoading(false)
-  }
-
-  async function cancelSub(subId: string, razorpayId: string | null) {
-    if (!confirm('Are you sure you want to cancel this subscription?')) return
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({ status: 'cancelled' })
-      .eq('id', subId)
-    if (error) { toast.error('Failed to cancel subscription'); return }
-    toast.success('Subscription cancelled')
-    setSubs(prev => prev.map(s => s.id === subId ? { ...s, status: 'cancelled' } : s))
-  }
-
-  const stats = {
-    active: subs.filter(s => s.status === 'active').length,
-    past_due: subs.filter(s => s.status === 'past_due').length,
-    revenue: subs.filter(s => s.status === 'active').reduce((acc, s) => acc + Number(s.amount), 0),
-  }
-
-  return (
-    <div className="min-h-screen bg-warmwhite">
-      <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/admin/dashboard"><ArrowLeft className="w-4 h-4 mr-1" />Admin</Link>
-        </Button>
-        <h1 className="font-serif font-bold text-lg">Subscriptions</h1>
-      </div>
-
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-4">
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: 'Active', value: stats.active, icon: Crown, color: 'text-green-600' },
-            { label: 'Past Due', value: stats.past_due, icon: AlertTriangle, color: 'text-red-500' },
-            { label: 'MRR', value: `₹${stats.revenue.toLocaleString('en-IN')}`, icon: Crown, color: 'text-forest-700' },
-          ].map(s => (
-            <Card key={s.label}>
-              <CardContent className="p-4 flex items-center gap-3">
-                <s.icon className={`w-8 h-8 ${s.color}`} />
-                <div>
-                  <div className="text-2xl font-bold">{s.value}</div>
-                  <div className="text-xs text-muted-foreground">{s.label}</div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">All Subscriptions ({subs.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="p-8 text-center text-muted-foreground">Loading...</div>
-            ) : subs.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">No subscriptions yet</div>
-            ) : (
-              <div className="divide-y divide-border">
-                {subs.map(s => (
-                  <div key={s.id} className="flex items-center gap-3 p-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm">{s.owner?.name ?? 'Unknown'}</div>
-                      <div className="text-xs text-muted-foreground">{s.owner?.email}</div>
-                      {s.razorpay_subscription_id && (
-                        <div className="text-xs text-muted-foreground font-mono">{s.razorpay_subscription_id}</div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${planColors[s.plan] ?? ''}`}>
-                        {s.plan}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[s.status] ?? ''}`}>
-                        {s.status}
-                      </span>
-                      <span className="text-sm font-medium text-forest-700">
-                        ₹{Number(s.amount).toLocaleString('en-IN')}/mo
-                      </span>
-                      {s.current_period_end && (
-                        <span className="text-xs text-muted-foreground hidden sm:block">
-                          Renews {format(new Date(s.current_period_end), 'dd MMM')}
-                        </span>
-                      )}
-                      {s.status === 'active' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs text-red-600 border-red-300 hover:bg-red-50"
-                          onClick={() => cancelSub(s.id, s.razorpay_subscription_id)}
-                        >
-                          Cancel
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
+  return <SubscriptionsClient
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    initialSubs={(subs ?? []) as any[]}
+  />
 }
